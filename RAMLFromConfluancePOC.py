@@ -51,7 +51,7 @@ def retrieve_path_parameters(request_url):
                 {}:
                     description: {}
                     type: {}
-                    example: Insert Example Here
+                    example: ---Insert Example---
             """.format(
             item[0],
             item[1],
@@ -98,15 +98,15 @@ def retrieve_query_parameters(request_url):
 # the RAML schema's 
 def retrieve_request_body_schema(request_url, first_field):
     data = retrieve_data(request_url)
-    another_path_parameter = True
+    another_parameter = True
     response_data = []
     res = data.index(first_field)
-    while another_path_parameter:
+    while another_parameter:
         response_data.append([data[res], data[res + 1], data[res + 2]])
         if data[res + 9] != 'O1':
             res = res + 10
         else:
-            another_path_parameter = False
+            another_parameter = False
     response = """{
         "$schema": "http://json-schema.org/draft-04/schema#",
         "title": "---Insert title---",
@@ -115,10 +115,8 @@ def retrieve_request_body_schema(request_url, first_field):
         "properties": {
     """
     for item in response_data:
-        print(response)
-        print(item)
         element = ""
-        if item[2] == 'Array':
+        if item[2] == 'Array' or item[2] == 'array':
             response = response + """
             {}: {{
                 "type": "Array",
@@ -130,33 +128,33 @@ def retrieve_request_body_schema(request_url, first_field):
                 item[0],
                 item[1]
             )
-        elif item[2] == 'Object':
+        elif item[2] == 'Object' or item[2] == 'object':
             pass
-        elif item[2] == 'string (date)':
+        elif item[2] == 'String (date)' or item[2] == 'string (date)':
             element = """
             "{}": {{
                 "description": "{}",
                 "type": "string",
-                "example": "---Insert example from description---"
+                "example": "---Insert example---"
             }}""".format(
                 item[0],
                 item[1]
             )
-        elif item[2] == 'string':
+        else:
             element = """
             {}: {{
                 "description": {},
                 "type": {},
-                "example": "---Insert example from description---"
+                "example": "---Insert example---"
             }}""".format(
                 item[0],
                 item[1],
                 item[2]
             )
         response = response + element
-    response = response + """  }},
+    response = response + """  },
         "additionalProperties": false
-    }}
+    }
     """
     print(response)
     return response
@@ -166,17 +164,64 @@ def retrieve_request_body_schema(request_url, first_field):
 # in the RAML schema's 
 def retrieve_response_body_schema(request_url):
     data = retrieve_data(request_url)
-    another_path_parameter = True
-    response = []
+    another_parameter = True
+    response_data = []
     res = data.index('O1')
-    while another_path_parameter:
-        response.append(
-            [data[res], data[res + 1], data[res + 2], data[res + 3], data[res + 4], data[res + 5], data[res + 6],
-             data[res + 7], data[res + 8]])
+    while another_parameter:
+        response_data.append([data[res + 1], data[res + 2], data[res + 3]])
         if data[res + 9] != 'L1':
             res = res + 9
         else:
-            another_path_parameter = False
+            another_parameter = False
+    response = """{
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "title": "---Insert title---",
+        "description": "---Insert description---",
+        "type": "object",
+        "properties": {
+    """
+    for item in response_data:
+        element = ""
+        if item[2] == 'Array' or item[2] == 'array':
+            response = response + """
+            {}: {{
+                "type": "Array",
+                "description": {},
+                "items": {{
+                    "type": "object",
+                    "properties": {{
+            """.format(
+                item[0],
+                item[1]
+            )
+        elif item[2] == 'Object' or item[2] == 'object':
+            pass
+        elif item[2] == 'String (date)' or item[2] == 'string (date)':
+            element = """
+            "{}": {{
+                "description": "{}",
+                "type": "string",
+                "example": "---Insert example---"
+            }}""".format(
+                item[0],
+                item[1]
+            )
+        else:
+            element = """
+            {}: {{
+                "description": {},
+                "type": {},
+                "example": "---Insert example---"
+            }}""".format(
+                item[0],
+                item[1],
+                item[2]
+            )
+        response = response + element
+    response = response + """  },
+        "additionalProperties": false
+    }
+    """
     print(response)
     return response
 
@@ -184,16 +229,16 @@ def retrieve_response_body_schema(request_url):
 # This function separates out the relevant data for the Errors
 def retrieve_errors_list(request_url, last_error):
     data = retrieve_data(request_url)
-    another_path_parameter = True
+    another_parameter = True
     response = []
     res = data.index('E2')
     res = res - 7
-    while another_path_parameter:
+    while another_parameter:
         response.append([data[res + 2], data[res + 3]])
         if data[res] != last_error:
             res = res + 7
         else:
-            another_path_parameter = False
+            another_parameter = False
     print(response)
     return response
 
@@ -217,7 +262,7 @@ if __name__ == '__main__':
     )
 
     print('---Response Body---')
-    # request body schema will require close brackets Applying to the Appropriate places, formatting, and required and
+    # response body schema will require close brackets Applying to the Appropriate places, formatting, and required and
     # additionalProperties fields
     retrieve_response_body_schema(
         'https://confluence.tools.tax.service.gov.uk/display/MTE/Retrieve+Income+Tax+%28Self+Assessment%29+Crystallisation+Obligations+-+Requirements+Spec'
